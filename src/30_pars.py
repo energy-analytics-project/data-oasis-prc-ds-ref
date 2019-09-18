@@ -16,28 +16,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-
 # -----------------------------------------------------------------------------
-# 10_down.py : download resources from resource_url
-# 
-# * after downloading, resource urls are appended to zip/downloaded.txt
-# * zip/downloaded.txt can be checked into the repo, whereas the the downloaded
-#   resources should not be checked in to git. Instead, they are uploaded to
-#   an S3 bucket 'eap'.
+# 30_pars.py : parse resources from an xml file into SQL for later insertion
 # -----------------------------------------------------------------------------
 
-import datetime
-import requests
-import sys
-import os
-import time
-import logging
-import json
-from edl.resources import state
 from edl.resources import log
-from edl.resources import web
-from edl.resources import time as xtime
-
+from edl.resources import state
+from edl.resources import xmlparser
+import datetime as dt
+import json
+import logging
+import os
+import pprint
+import sqlite3
+import sys
+import xml.dom.minidom as md
 
 # -----------------------------------------------------------------------------
 # Config
@@ -45,54 +38,47 @@ from edl.resources import time as xtime
 def config():
     """
     config = {
-            "source_dir"    : not used
-            "working_dir"   : location to download zip files
-            "state_file"    : fqpath to file that lists downloaded zip files
+            "source_dir"    : location of the xml files
+            "working_dir"   : location of the database
+            "state_file"    : fqpath to file that lists the inserted xml files
             }
     """
     cwd                     = os.path.abspath(os.path.curdir)
-    zip_dir                 = os.path.join(cwd, "zip")
-    state_file              = os.path.join(zip_dir, "state.txt")
     config = {
-            "working_dir"   : zip_dir,
-            "state_file"    : state_file
+            "source_dir"    : os.path.join(cwd, "xml"),
+            "working_dir"   : os.path.join(cwd, "sql"),
+            "state_file"    : os.path.join(cwd, "sql", "state.txt")
             }
     return config
+
 
 # -----------------------------------------------------------------------------
 # Entrypoint
 # -----------------------------------------------------------------------------
 def run(logger, manifest, config):
-    start_date      = datetime.date(*manifest['start_date'])
     resource_name   = manifest['name']
     resource_url    = manifest['url']
-    delay           = manifest['download_delay_secs']
-    download_dir    = config['working_dir']
+    pk_exclusions   = manifest.pop('pk_exclusions', ['value'])
+    xml_namespace   = manifest['xml_namespace']
+    xml_dir         = config['source_dir']
+    sql_dir         = config['working_dir']
     state_file      = config['state_file']
-    # sleep for N seconds in between downloads to meet caiso expected use requirements
-    dates   = xtime.range_pairs(xtime.day_range_to_today(start_date))
-    urls    = list(web.generate_urls(logger, dates, resource_url))
+    new_files = state.new_files(resource_name, state_file, xml_dir, '.xml')
     log.debug(logger, {
         "name"      : __name__,
         "method"    : "run",
         "resource"  : resource_name,
         "url"       : resource_url,
-        "delay"     : delay,
-        "download_dir": download_dir,
+        "pk_exclusions"   : pk_exclusions,
+        "xml_namespace"   : xml_namespace,
+        "xml_dir"   : xml_dir,
+        "sql_dir"   : sql_dir,
         "state_file": state_file,
-        "start_date": str(start_date),
-        "urls_count": len(urls),
+        "new_files_count" : len(new_files),
         })
     state.update(
-            web.download(
-                logger,
-                resource_name,
-                delay,
-                urls,
-                state_file,
-                download_dir),
-            state_file
-            )
+            xmlparser.parse(logger, resource_name, new_files, xml_dir, sql_dir, pk_exclusions, xml_namespace), 
+            state_file)
 
 # -----------------------------------------------------------------------------
 # Main
@@ -108,7 +94,7 @@ if __name__ == "__main__":
     log.debug(logger, {
         "name"      : __name__,
         "method"    : "main",
-        "src"       : "10_down.py"
+        "src"       : "30_pars.py"
         })
     with open('manifest.json', 'r') as json_file:
         m = json.load(json_file)

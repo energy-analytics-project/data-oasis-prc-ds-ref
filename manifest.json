@@ -41,7 +41,9 @@
         "                    )",
         "        );"
     ],
+    "delay": "5",
     "description": "TODO: add a description of this data source here",
+    "download_delay_secs": 5,
     "email": "pub+github@zwrob.com",
     "maintainer": "Todd Greenwood-Geer",
     "name": "data-oasis-prc-ds-ref",

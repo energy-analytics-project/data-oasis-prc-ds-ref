@@ -103,11 +103,14 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# zip files are uploaded to DO spaces at https://eap.sfo2.digitaloceanspaces.com
+# zip files are uploaded to s3 buckets
 zip/*.zip
 
-# xml files are not included in repo as they can be extracted from the zip files
+# xml files are uploaded to s3 buckets
 xml/*.xml
+
+# sql files are uploaded to s3 buckets
+sql/*.sql
 
 # db files to be both uploaded to DO spaces _and_ checked in to repo via git lfs.
 # this enables using all the databases from jupyter notebooks in github
