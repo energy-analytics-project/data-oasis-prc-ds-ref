@@ -112,8 +112,8 @@ xml/*.xml
 # sql files are uploaded to s3 buckets
 sql/*.sql
 
-# db files to be both uploaded to DO spaces _and_ checked in to repo via git lfs.
-# this enables using all the databases from jupyter notebooks in github
-# NOT ENABLING THIS GIT IGNORE 
-# db/*.db 
-# NOT ENABLING THIS GIT IGNORE 
+# db files are uploaded to s3 buckets
+db/*.db 
+
+# don't save db journal files
+*.db-journal

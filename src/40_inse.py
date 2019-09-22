@@ -31,6 +31,7 @@ import pprint
 import sqlite3
 import sys
 import xml.dom.minidom as md
+import shutil
 
 # -----------------------------------------------------------------------------
 # Config
@@ -41,6 +42,7 @@ def config():
             "source_dir"    : location of the xml files
             "working_dir"   : location of the database
             "state_file"    : fqpath to file that lists the inserted xml files
+            "mem_mount"     : in memory file system
             }
     """
     cwd                     = os.path.abspath(os.path.curdir)
@@ -50,7 +52,8 @@ def config():
     config = {
             "source_dir"    : sql_dir,
             "working_dir"   : db_dir,
-            "state_file"    : state_file
+            "state_file"    : state_file,
+            "mem_mount"     : "/mnt/ramdisk",
             }
     return config
 
@@ -63,19 +66,56 @@ def run(logger, manifest, config):
     sql_dir         = config['source_dir']
     db_dir          = config['working_dir']
     state_file      = config['state_file']
+    mem_mount       = config['mem_mount']
     new_files = state.new_files(resource_name, state_file, sql_dir, '.sql')
-    log.debug(logger, {
+    log.info(logger, {
         "name"      : __name__,
         "method"    : "run",
         "resource"  : resource_name,
+        "mem_mount" : str(mem_mount),
         "sql_dir"   : sql_dir,
         "db_dir"    : db_dir,
         "state_file": state_file,
         "new_files_count" : len(new_files),
+        "message"   : "started processing sql files",
         })
-    state.update(
-                db.insert(logger, resource_name, sql_dir, db_dir, new_files),
-                state_file)
+    if not os.path.exists(db_dir):
+        os.makedirs(db_dir)
+    if mem_mount is not None:
+        mem_db_dir = os.path.join(mem_mount, resource_name)
+        shutil.copytree(db_dir, mem_db_dir)
+        try:
+            state.update(db.insert(logger, resource_name, sql_dir, mem_db_dir, new_files), state_file)
+        except:
+            pass
+        finally:
+            temp_dir_name = "%s.temp" % db_dir
+            shutil.move(mem_db_dir, temp_dir_name)
+            shutil.rmtree(db_dir)
+            os.rename(temp_dir_name, db_dir)
+            log.info(logger, {
+                "name"      : __name__,
+                "method"    : "run",
+                "resource"  : resource_name,
+                "mem_mount" : mem_mount,
+                "sql_dir"   : sql_dir,
+                "db_dir"    : db_dir,
+                "state_file": state_file,
+                "new_files_count" : len(new_files),
+                "message"   : "finished processing sql files",
+                })
+    else:
+        state.update(db.insert(logger, resource_name, sql_dir, db_dir, new_files), state_file)
+        log.info(logger, {
+            "name"      : __name__,
+            "method"    : "run",
+            "resource"  : resource_name,
+            "sql_dir"   : sql_dir,
+            "db_dir"    : db_dir,
+            "state_file": state_file,
+            "new_files_count" : len(new_files),
+            "message"   : "finished processing sql files",
+            })
 
 # -----------------------------------------------------------------------------
 # Main
