@@ -17,20 +17,17 @@
 
 
 # -----------------------------------------------------------------------------
-# 30_pars.py : parse resources from an xml file into SQL for later insertion
+# 70_arch.py : archive distribution to s3
 # -----------------------------------------------------------------------------
 
 from edl.resources import log
+from edl.cli import feed as clifeed
 from edl.resources import state
-from edl.resources import xmlparser
-import datetime as dt
 import json
 import logging
-import os
-import pprint
-import sqlite3
 import sys
-import xml.dom.minidom as md
+import shutil
+import os
 
 # -----------------------------------------------------------------------------
 # Config
@@ -38,16 +35,13 @@ import xml.dom.minidom as md
 def config():
     """
     config = {
-            "source_dir"    : location of the xml files
-            "working_dir"   : location of the database
-            "state_file"    : fqpath to file that lists the inserted xml files
+                "wasabi_bwlimit"        : [rclone] Bandwidth limit in kBytes/s, or use suffix b|k|M|G or a full timetable.
+                "digitalocean_bwlimit"  : [rclone] Bandwidth limit in kBytes/s, or use suffix b|k|M|G or a full timetable.
             }
     """
-    cwd                     = os.path.abspath(os.path.curdir)
     config = {
-            "source_dir"    : os.path.join(cwd, "xml"),
-            "working_dir"   : os.path.join(cwd, "sql"),
-            "state_file"    : os.path.join(cwd, "sql", "state.txt")
+            "wasabi_bwlimit"        : "500K",
+            "digitalocean_bwlimit"  : "500K"            
             }
     return config
 
@@ -56,25 +50,33 @@ def config():
 # Entrypoint
 # -----------------------------------------------------------------------------
 def run(logger, manifest, config):
-    resource_name   = manifest['name']
-    resource_url    = manifest['url']
-    xml_dir         = config['source_dir']
-    sql_dir         = config['working_dir']
-    state_file      = config['state_file']
-    new_files = state.new_files(resource_name, state_file, xml_dir, '.xml')
-    log.debug(logger, {
+    resource_name           = manifest['name']
+    wasabi_bandwidth_limit  = config['wasabi_bwlimit']
+    digitalocean_bandwidth_limit = config['digitalocean_bwlimit']
+    log.info(logger, {
         "name"      : __name__,
         "method"    : "run",
         "resource"  : resource_name,
-        "url"       : resource_url,
-        "xml_dir"   : xml_dir,
-        "sql_dir"   : sql_dir,
-        "state_file": state_file,
-        "new_files_count" : len(new_files),
+        "message"   : "archiving...",
         })
-    state.update(
-            xmlparser.parse(logger, resource_name, new_files, xml_dir, sql_dir), 
-            state_file)
+    ed_path = os.path.dirname(os.path.dirname(os.path.abspath(os.curdir)))
+    for output in clifeed.archive_to_s3(logger, resource_name, ed_path, "wasabi", wasabi_bandwidth_limit):
+        log.info(logger, {
+            "name"      : __name__,
+            "method"    : "run",
+            "resource"  : resource_name,
+            "service"   : "wasabi",
+            "stdout"   : str(output),
+            })
+    for output in clifeed.archive_to_s3(logger, resource_name, ed_path, "digitalocean", digitalocean_bandwidth_limit):
+        log.info(logger, {
+            "name"      : __name__,
+            "method"    : "run",
+            "resource"  : resource_name,
+            "service"   : "digitalocean",
+            "stdout"   : str(output),
+            })
+    shutil.rmtree(os.path.join(os.curdir, 'dist'))
 
 # -----------------------------------------------------------------------------
 # Main
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     log.debug(logger, {
         "name"      : __name__,
         "method"    : "main",
-        "src"       : "30_pars.py"
+        "src"       : "70_arch.py"
         })
     with open('manifest.json', 'r') as json_file:
         m = json.load(json_file)

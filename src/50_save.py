@@ -80,7 +80,8 @@ def run(logger, manifest, config):
             "state_file": state_file,
             "message"   : "created save dir",
             })
-    save.git_add_and_commit(logger, resource_name, db_dir, state_file)
+
+    save.git_add_and_commit(logger, resource_name)
 
     log.info(logger, {
         "name"      : __name__,
