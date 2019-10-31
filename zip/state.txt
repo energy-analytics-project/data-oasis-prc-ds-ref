@@ -2484,3 +2484,10 @@ http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=201
 http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191020T07:00-0000&enddatetime=20191021T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
 http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191021T07:00-0000&enddatetime=20191022T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
 http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191022T07:00-0000&enddatetime=20191023T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
+http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191023T07:00-0000&enddatetime=20191024T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
+http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191024T07:00-0000&enddatetime=20191025T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
+http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191025T07:00-0000&enddatetime=20191026T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
+http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191026T07:00-0000&enddatetime=20191027T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
+http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191027T07:00-0000&enddatetime=20191028T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
+http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191028T07:00-0000&enddatetime=20191029T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
+http://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_DS_REF&startdatetime=20191029T07:00-0000&enddatetime=20191030T07:00-0000&version=1&market_run_id=DAM&node_id=ALL
